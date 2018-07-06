@@ -55,7 +55,7 @@ public class ChatFragment extends Fragment {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            TextView view = (TextView) LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+            TextView view = (TextView) LayoutInflater.from(parent.getContext()).inflate(R.layout.simple_text_view, parent, false);
             return new ViewHolder(view);
         }
 
