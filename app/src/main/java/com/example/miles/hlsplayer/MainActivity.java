@@ -1,15 +1,28 @@
 package com.example.miles.hlsplayer;
 
+import android.content.res.Configuration;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.view.OnApplyWindowInsetsListener;
+import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v4.view.WindowInsetsCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
+import android.widget.TextView;
 
+import com.example.miles.hlsplayer.keyboard.KeyboardHeightObserver;
+import com.example.miles.hlsplayer.keyboard.KeyboardHeightProvider;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -28,7 +41,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.video.VideoListener;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements KeyboardHeightObserver {
     private static final Uri VIDEO_URI = Uri.parse("http://content.jwplatform.com/manifests/vM7nH0Kl.m3u8");
     private static final Uri ZONE3_VIDEO_URI = Uri.parse("https://beta-academy.nova.navercorp.com/live/SG/jamdevchannel3/video/21377_s_l_ab.m3u8");
     private static final int NUM_PAGES = 2;
@@ -36,15 +49,13 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager chatPager;
     private DefaultBandwidthMeter bandwidthMeter;
     private SimpleExoPlayer player;
-    private ScrollView scrollView;
+    private KeyboardHeightProvider keyboardHeightProvider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        scrollView = findViewById(R.id.fake_scroll_view);
-        scrollView.setEnabled(false);
         playerView = findViewById(R.id.player_view);
         playerView.hideController();
         createPlayer();
@@ -55,6 +66,16 @@ public class MainActivity extends AppCompatActivity {
         chatPager.setAdapter(new ChatPagerAdapter(getSupportFragmentManager()));
         chatPager.setCurrentItem(1);
 
+        keyboardHeightProvider = new KeyboardHeightProvider(this);
+        findViewById(android.R.id.content).post(() -> {
+            keyboardHeightProvider.start();
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        keyboardHeightProvider.setKeyboardHeightObserver(this);
     }
 
     private void createPlayer() {
@@ -104,6 +125,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         player.release();
+        keyboardHeightProvider.close();
+    }
+
+    @Override
+    public void onKeyboardHeightChanged(int height, int orientation) {
+
+        // color the keyboard height view, this will stay when you close the keyboard
+        ConstraintLayout.LayoutParams layoutParams = (ConstraintLayout.LayoutParams) chatPager.getLayoutParams();
+        layoutParams.bottomMargin = height;
+        chatPager.setLayoutParams(layoutParams);
     }
 
     private class ChatPagerAdapter extends FragmentStatePagerAdapter {
