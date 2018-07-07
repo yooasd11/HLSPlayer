@@ -3,7 +3,7 @@
 buildscript {
     
     repositories {
-        maven { url "http://repo.snow.me/repository/maven-public" }
+        // maven { url "http://repo.snow.me/repository/maven-public" }
         google()
         jcenter()
     }
@@ -18,7 +18,7 @@ buildscript {
 
 allprojects {
     repositories {
-        maven { url "http://repo.snow.me/repository/maven-public" }
+        // maven { url "http://repo.snow.me/repository/maven-public" }
         google()
         jcenter()
     }

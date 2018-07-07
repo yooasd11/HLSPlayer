@@ -1,34 +1,24 @@
 package com.example.miles.hlsplayer;
 
-import android.content.res.Configuration;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.view.ViewGroup;
+import android.widget.ScrollView;
 
-import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
-import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.hls.playlist.HlsPlaylistParser;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
@@ -39,19 +29,22 @@ import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.video.VideoListener;
 
 public class MainActivity extends AppCompatActivity {
-    private static final Uri VIDEO_URI = Uri.parse("https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8");
+    private static final Uri VIDEO_URI = Uri.parse("http://content.jwplatform.com/manifests/vM7nH0Kl.m3u8");
     private static final Uri ZONE3_VIDEO_URI = Uri.parse("https://beta-academy.nova.navercorp.com/live/SG/jamdevchannel3/video/21377_s_l_ab.m3u8");
     private static final int NUM_PAGES = 2;
     private PlayerView playerView;
     private ViewPager chatPager;
     private DefaultBandwidthMeter bandwidthMeter;
     private SimpleExoPlayer player;
+    private ScrollView scrollView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        scrollView = findViewById(R.id.fake_scroll_view);
+        scrollView.setEnabled(false);
         playerView = findViewById(R.id.player_view);
         playerView.hideController();
         createPlayer();
@@ -62,28 +55,6 @@ public class MainActivity extends AppCompatActivity {
         chatPager.setAdapter(new ChatPagerAdapter(getSupportFragmentManager()));
         chatPager.setCurrentItem(1);
 
-        View rootView = playerView.getRootView();
-        chatPager.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            Rect rect = new Rect();
-            rootView.getWindowVisibleDisplayFrame(rect);
-
-            int screenHeight = rootView.getHeight();
-            int keyboardHeight = screenHeight - rect.bottom;
-
-            ConstraintLayout.LayoutParams layoutParams = new ConstraintLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            if (keyboardHeight > 200) {
-                layoutParams.bottomMargin = keyboardHeight;
-            } else {
-                layoutParams.bottomMargin = 0;
-            }
-            chatPager.setLayoutParams(layoutParams);
-        });
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        resizeVideoProperly();
     }
 
     private void createPlayer() {
