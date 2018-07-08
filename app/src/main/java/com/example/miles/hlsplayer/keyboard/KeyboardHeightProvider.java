@@ -80,15 +80,11 @@ public class KeyboardHeightProvider extends PopupWindow {
         setWidth(0);
         setHeight(LayoutParams.MATCH_PARENT);
 
-        popupView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-
-                @Override
-                public void onGlobalLayout() {
-                    if (popupView != null) {
-                        handleOnGlobalLayout();
-                    }
-                }
-            });
+        popupView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            if (popupView != null) {
+                handleOnGlobalLayout();
+            }
+        });
     }
 
     /**
@@ -99,7 +95,7 @@ public class KeyboardHeightProvider extends PopupWindow {
     public void start() {
 
         if (!isShowing() && parentView.getWindowToken() != null) {
-            setBackgroundDrawable(new ColorDrawable(0));
+            //setBackgroundDrawable(new ColorDrawable(0));
             showAtLocation(parentView, Gravity.NO_GRAVITY, 0, 0);
         }
     }

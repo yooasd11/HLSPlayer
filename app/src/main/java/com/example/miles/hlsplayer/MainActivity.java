@@ -78,34 +78,30 @@ public class MainActivity extends AppCompatActivity implements KeyboardHeightObs
     }
 
     private void createPlayer() {
-        if (player == null) {
-            bandwidthMeter = new DefaultBandwidthMeter();
-            TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
-            TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
-            player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
-        }
+        bandwidthMeter = new DefaultBandwidthMeter();
+        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+        TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
+        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
     }
 
     private void preparePlayer() {
-        if (videoSource == null || player.getPlaybackState() != Player.STATE_READY) {
-            DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "HLSPlayer"), bandwidthMeter);
-            videoSource = new HlsMediaSource.Factory(dataSourceFactory)
-                    .setPlaylistParser(new HlsPlaylistParser())
-                    .createMediaSource(VIDEO_URI);
-            player.prepare(videoSource);
-            player.setPlayWhenReady(true);
-            player.addVideoListener(new VideoListener() {
-                @Override
-                public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "HLSPlayer"), bandwidthMeter);
+        videoSource = new HlsMediaSource.Factory(dataSourceFactory)
+                .setPlaylistParser(new HlsPlaylistParser())
+                .createMediaSource(VIDEO_URI);
+        player.prepare(videoSource);
+        player.setPlayWhenReady(true);
+        player.addVideoListener(new VideoListener() {
+            @Override
+            public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
 
-                }
+            }
 
-                @Override
-                public void onRenderedFirstFrame() {
-                    resizeVideoProperly();
-                }
-            });
-        }
+            @Override
+            public void onRenderedFirstFrame() {
+                //resizeVideoProperly();
+            }
+        });
     }
 
     private void resizeVideoProperly() {
