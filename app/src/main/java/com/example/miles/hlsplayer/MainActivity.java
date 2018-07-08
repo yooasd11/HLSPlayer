@@ -10,12 +10,12 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 import com.example.miles.hlsplayer.keyboard.KeyboardHeightObserver;
 import com.example.miles.hlsplayer.keyboard.KeyboardHeightProvider;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
-import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -60,8 +60,18 @@ public class MainActivity extends AppCompatActivity implements KeyboardHeightObs
 
         keyboardHeightProvider = new KeyboardHeightProvider(this);
         // View가 붙을때 까지 기다렸다가 start
-        findViewById(android.R.id.content).post(() -> {
+        /*findViewById(android.R.id.content).post(() -> {
             keyboardHeightProvider.start();
+        });*/
+        findViewById(android.R.id.content).addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                keyboardHeightProvider.start();
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+            }
         });
     }
 
