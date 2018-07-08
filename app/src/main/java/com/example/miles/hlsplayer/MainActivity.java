@@ -8,23 +8,14 @@ import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.OnApplyWindowInsetsListener;
-import android.support.v4.view.ViewCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v4.view.WindowInsetsCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.widget.RelativeLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
 import com.example.miles.hlsplayer.keyboard.KeyboardHeightObserver;
 import com.example.miles.hlsplayer.keyboard.KeyboardHeightProvider;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -50,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements KeyboardHeightObs
     private DefaultBandwidthMeter bandwidthMeter;
     private SimpleExoPlayer player;
     private KeyboardHeightProvider keyboardHeightProvider;
+    private MediaSource videoSource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements KeyboardHeightObs
         chatPager.setCurrentItem(1);
 
         keyboardHeightProvider = new KeyboardHeightProvider(this);
+        // View가 붙을때 까지 기다렸다가 start
         findViewById(android.R.id.content).post(() -> {
             keyboardHeightProvider.start();
         });
@@ -78,32 +71,41 @@ public class MainActivity extends AppCompatActivity implements KeyboardHeightObs
         keyboardHeightProvider.setKeyboardHeightObserver(this);
     }
 
-    private void createPlayer() {
-        bandwidthMeter = new DefaultBandwidthMeter();
-        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
-        TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
-        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        keyboardHeightProvider.setKeyboardHeightObserver(this);
+    }
 
+    private void createPlayer() {
+        if (player == null) {
+            bandwidthMeter = new DefaultBandwidthMeter();
+            TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+            TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
+            player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
+        }
     }
 
     private void preparePlayer() {
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "HLSPlayer"), bandwidthMeter);
-        MediaSource videoSource = new HlsMediaSource.Factory(dataSourceFactory)
-                                .setPlaylistParser(new HlsPlaylistParser())
-                                .createMediaSource(VIDEO_URI);
-        player.prepare(videoSource);
-        player.setPlayWhenReady(true);
-        player.addVideoListener(new VideoListener() {
-            @Override
-            public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+        if (videoSource == null || player.getPlaybackState() != Player.STATE_READY) {
+            DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this, Util.getUserAgent(this, "HLSPlayer"), bandwidthMeter);
+            videoSource = new HlsMediaSource.Factory(dataSourceFactory)
+                    .setPlaylistParser(new HlsPlaylistParser())
+                    .createMediaSource(VIDEO_URI);
+            player.prepare(videoSource);
+            player.setPlayWhenReady(true);
+            player.addVideoListener(new VideoListener() {
+                @Override
+                public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
 
-            }
+                }
 
-            @Override
-            public void onRenderedFirstFrame() {
-                resizeVideoProperly();
-            }
-        });
+                @Override
+                public void onRenderedFirstFrame() {
+                    resizeVideoProperly();
+                }
+            });
+        }
     }
 
     private void resizeVideoProperly() {
