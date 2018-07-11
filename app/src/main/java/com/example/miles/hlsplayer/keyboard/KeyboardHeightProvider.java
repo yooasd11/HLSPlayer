@@ -19,13 +19,11 @@ package com.example.miles.hlsplayer.keyboard;
 
 import android.app.Activity;
 import android.content.res.Configuration;
-import android.graphics.Point;
+import android.content.res.Resources;
 import android.graphics.Rect;
-import android.graphics.drawable.ColorDrawable;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.WindowManager.LayoutParams;
 import android.widget.PopupWindow;
 
@@ -135,9 +133,7 @@ public class KeyboardHeightProvider extends PopupWindow {
      * from the activity window height. 
      */
     private void handleOnGlobalLayout() {
-
-        Point screenSize = new Point();
-        activity.getWindowManager().getDefaultDisplay().getSize(screenSize);
+        int screenHeight = activity.getWindow().getDecorView().getHeight();
 
         Rect rect = new Rect();
         popupView.getWindowVisibleDisplayFrame(rect);
@@ -146,19 +142,27 @@ public class KeyboardHeightProvider extends PopupWindow {
         // and also using the status bar and navigation bar heights of the phone to calculate
         // the keyboard height. But this worked fine on a Nexus.
         int orientation = getScreenOrientation();
-        int keyboardHeight = screenSize.y - rect.bottom;
-        
-        if (keyboardHeight == 0) {
+        int keyboardHeight = screenHeight - rect.bottom - getNavigationBarHeight();
+        if (keyboardHeight <= 0) {
             notifyKeyboardHeightChanged(0, orientation);
+        } else if (keyboardHeight > 200) {
+            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                this.keyboardPortraitHeight = keyboardHeight;
+                notifyKeyboardHeightChanged(keyboardPortraitHeight, orientation);
+            } else {
+                this.keyboardLandscapeHeight = keyboardHeight;
+                notifyKeyboardHeightChanged(keyboardLandscapeHeight, orientation);
+            }
         }
-        else if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            this.keyboardPortraitHeight = keyboardHeight; 
-            notifyKeyboardHeightChanged(keyboardPortraitHeight, orientation);
-        } 
-        else {
-            this.keyboardLandscapeHeight = keyboardHeight; 
-            notifyKeyboardHeightChanged(keyboardLandscapeHeight, orientation);
+    }
+
+    private int getNavigationBarHeight() {
+        Resources resources = activity.getResources();
+        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return resources.getDimensionPixelSize(resourceId);
         }
+        return 0;
     }
 
     /**
